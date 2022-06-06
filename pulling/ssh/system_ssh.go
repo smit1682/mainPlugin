@@ -1,9 +1,11 @@
 package SSH
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"golang.org/x/crypto/ssh"
+	"os"
 	"strings"
 )
 
@@ -56,6 +58,8 @@ func system_ssh(sshClient *ssh.Client, host string) {
 	cxcString = strings.TrimRight(cxcString, "\n")
 	result := map[string]interface{}{
 		"host":                             host,
+		"status":                           "success",
+		"status.code":                      200,
 		"system.name":                      sysNameString,
 		"system.os.name":                   osNameString,
 		"system.os.version":                osVersionString,
@@ -64,7 +68,22 @@ func system_ssh(sshClient *ssh.Client, host string) {
 		"system.contextSwitch.per.seconds": cxcString,
 	}
 
-	b, _ := json.Marshal(result)
-	fmt.Println(string(b))
+	b, marshalErr := json.Marshal(result)
+	if marshalErr != nil {
+
+		statusMap := map[string]interface{}{
+			"status":      "error",
+			"error":       "Invalid Polling Json",
+			"status.code": 400,
+		}
+
+		b, _ := json.Marshal(statusMap)
+		encode := base64.StdEncoding.EncodeToString(b)
+		fmt.Println(encode)
+		os.Exit(0)
+
+	}
+	encode := base64.StdEncoding.EncodeToString(b)
+	fmt.Println(encode)
 
 }

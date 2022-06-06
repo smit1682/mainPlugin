@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"golang.org/x/crypto/ssh"
 	"log"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -16,11 +15,8 @@ func sshDiscovery(credentialsMap map[string]interface{}) {
 	sshHost := credentialsMap["host"]
 	sshUser := credentialsMap["username"].(string)
 	sshPassword := credentialsMap["password"].(string)
-	sshPort, errPort := strconv.ParseInt(credentialsMap["port"].(string), 10, 64)
-	if errPort != nil {
-		log.SetFlags(0)
-		log.Fatal(errPort)
-	}
+	sshPort := credentialsMap["port"]
+
 	config := &ssh.ClientConfig{
 		Timeout:         5 * time.Second, //ssh connection time out time is one second, if SSH validation error returns in one second
 		User:            sshUser,
@@ -29,13 +25,16 @@ func sshDiscovery(credentialsMap map[string]interface{}) {
 			"aes128-ctr", "aes192-ctr", "aes256-ctr",
 		}},
 	}
+
 	config.Auth = []ssh.AuthMethod{ssh.Password(sshPassword)}
 
-	addr := fmt.Sprintf("%s:%d", sshHost, sshPort)
+	addr := fmt.Sprintf("%s:%v", sshHost, sshPort)
 
 	sshClient, errDial := ssh.Dial("tcp", addr, config)
 
 	if errDial != nil {
+
+		fmt.Println("er", errDial.Error())
 
 		if strings.Contains(errDial.Error(), "handshake failed") {
 

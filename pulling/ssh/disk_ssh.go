@@ -1,9 +1,11 @@
 package SSH
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"golang.org/x/crypto/ssh"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -95,6 +97,8 @@ func disk_ssh(sshClient *ssh.Client, host string) {
 
 	result := map[string]interface{}{
 		"host":                 host,
+		"status":               "success",
+		"status.code":          200,
 		"disk":                 diskList,
 		"disk.total.bytes":     strconv.FormatInt(tDisk, 10),
 		"disk.used.bytes":      strconv.FormatInt(udisk, 10),
@@ -103,7 +107,22 @@ func disk_ssh(sshClient *ssh.Client, host string) {
 		"disk.free.percentage": strconv.FormatInt(100-u, 10),
 	}
 
-	b, _ := json.Marshal(result)
-	fmt.Println(string(b))
+	b, marshalErr := json.Marshal(result)
+	if marshalErr != nil {
+
+		statusMap := map[string]interface{}{
+			"status":      "error",
+			"error":       "Invalid Polling Json",
+			"status.code": 400,
+		}
+
+		b, _ := json.Marshal(statusMap)
+		encode := base64.StdEncoding.EncodeToString(b)
+		fmt.Println(encode)
+		os.Exit(0)
+
+	}
+	encode := base64.StdEncoding.EncodeToString(b)
+	fmt.Println(encode)
 
 }

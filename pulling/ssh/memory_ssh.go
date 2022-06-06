@@ -1,9 +1,11 @@
 package SSH
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"golang.org/x/crypto/ssh"
+	"os"
 	"strings"
 )
 
@@ -41,6 +43,8 @@ func memory_ssh(sshClient *ssh.Client, host string) {
 
 	result := map[string]interface{}{
 		"host":                         host,
+		"status":                       "success",
+		"status.code":                  200,
 		"memory.free.bytes":            array[3],
 		"memory.used.bytes":            array[2],
 		"memory.available.bytes":       array[6],
@@ -49,6 +53,21 @@ func memory_ssh(sshClient *ssh.Client, host string) {
 		"memory.free.percentage.bytes": final,
 	}
 
-	b, _ := json.Marshal(result)
-	fmt.Println(string(b))
+	b, marshalErr := json.Marshal(result)
+	if marshalErr != nil {
+
+		statusMap := map[string]interface{}{
+			"status":      "error",
+			"error":       "Invalid Polling Json",
+			"status.code": 400,
+		}
+
+		b, _ := json.Marshal(statusMap)
+		encode := base64.StdEncoding.EncodeToString(b)
+		fmt.Println(encode)
+		os.Exit(0)
+
+	}
+	encode := base64.StdEncoding.EncodeToString(b)
+	fmt.Println(encode)
 }

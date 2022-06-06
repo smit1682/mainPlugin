@@ -24,7 +24,7 @@ func snmpDiscovery(credentialsMap map[string]interface{}) {
 	params := &g.GoSNMP{
 		Target:    credentialsMap["host"].(string),
 		Port:      uint16(port),
-		Community: credentialsMap["password"].(string),
+		Community: credentialsMap["community"].(string),
 		Version:   version,
 		Timeout:   time.Duration(3) * time.Second,
 	}

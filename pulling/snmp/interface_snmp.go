@@ -1,13 +1,15 @@
 package SNMP
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/gosnmp/gosnmp"
 	g "github.com/gosnmp/gosnmp"
+	"os"
 )
 
-func interfaceSnmp(params *gosnmp.GoSNMP) {
+func interfaceSnmp(params *gosnmp.GoSNMP, host string) {
 
 	ifIndex := params.Walk(".1.3.6.1.2.1.2.2.1.1", printValueForIfIndex)
 	if ifIndex != nil {
@@ -97,12 +99,29 @@ func interfaceSnmp(params *gosnmp.GoSNMP) {
 	}
 
 	result1 := map[string]interface{}{
-
-		"interface": mapList,
+		"host":        host,
+		"interface":   mapList,
+		"status":      "success",
+		"status.code": 200,
 	}
 
-	b, _ := json.Marshal(result1)
-	fmt.Println(string(b))
+	b, marshalErr := json.Marshal(result1)
+	if marshalErr != nil {
+
+		statusMap := map[string]interface{}{
+			"status":      "error",
+			"error":       "Invalid Polling Json",
+			"status.code": 400,
+		}
+
+		b, _ := json.Marshal(statusMap)
+		encode := base64.StdEncoding.EncodeToString(b)
+		fmt.Println(encode)
+		os.Exit(0)
+
+	}
+	encode := base64.StdEncoding.EncodeToString(b)
+	fmt.Println(encode)
 
 }
 func printValueForIfIndex(pdu g.SnmpPDU) error {

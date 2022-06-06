@@ -1,8 +1,11 @@
 package SSH
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"golang.org/x/crypto/ssh"
+	"os"
 	"strings"
 	"time"
 )
@@ -14,15 +17,24 @@ func standardizeSpaces(s string) string {
 func SshPlugin(credentialsMap map[string]interface{}) {
 
 	sshHost := credentialsMap["host"].(string)
-	sshUser := credentialsMap["username"].(string)
-	sshPassword := credentialsMap["password"].(string)
-
 	sshPort := credentialsMap["port"] //port
 
-	/*if err != nil {
+	sshUser, errUsername := credentialsMap["username"].(string)
+	sshPassword, errPassword := credentialsMap["password"].(string)
+	if !errUsername || !errPassword {
+		statusMap := map[string]interface{}{
+			"status":      "error",
+			"error":       "Invalid Request",
+			"status.code": 400,
+		}
 
-		log.Fatal("Error: Port conversion string to Int", err)
-	}*/
+		b, _ := json.Marshal(statusMap)
+
+		encode := base64.StdEncoding.EncodeToString(b)
+		fmt.Println(encode)
+		os.Exit(0)
+
+	}
 
 	// Create SSHP login configuration
 	config := &ssh.ClientConfig{
@@ -39,25 +51,77 @@ func SshPlugin(credentialsMap map[string]interface{}) {
 	// dial gets SSH client
 	addr := fmt.Sprintf("%s:%v", sshHost, sshPort)
 
-	sshClient, err := ssh.Dial("tcp", addr, config)
-	if err != nil {
-		panic(err)
+	sshClient, errDial := ssh.Dial("tcp", addr, config)
+
+	//defer sshClient.Close()
+
+	if errDial != nil {
+
+		if strings.Contains(errDial.Error(), "handshake failed") {
+
+			statusMap := map[string]interface{}{
+				"status":      "error",
+				"error":       "UNAUTHORIZED | reason: wrong credentials(Username or Password)",
+				"status.code": 400,
+			}
+
+			b, _ := json.Marshal(statusMap)
+
+			encode := base64.StdEncoding.EncodeToString(b)
+			fmt.Println(encode)
+			os.Exit(0)
+		} else if strings.Contains(errDial.Error(), "connection refused") {
+
+			statusMap := map[string]interface{}{
+				"status":      "error",
+				"error":       "ERR_CONNECTION_REFUSED | reason: port is not available",
+				"status.code": 400,
+			}
+
+			b, _ := json.Marshal(statusMap)
+
+			encode := base64.StdEncoding.EncodeToString(b)
+			fmt.Println(encode)
+			os.Exit(0)
+		} else {
+			statusMap := map[string]interface{}{
+				"status":      "error",
+				"error":       errDial.Error(),
+				"status.code": 400,
+			}
+
+			b, _ := json.Marshal(statusMap)
+
+			encode := base64.StdEncoding.EncodeToString(b)
+			fmt.Println(encode)
+			os.Exit(0)
+		}
 
 	}
-	defer sshClient.Close()
 
 	switch credentialsMap["metric.group"] {
 	case "cpu":
-		cpu_ssh(sshClient, credentialsMap["host"].(string))
+		cpu_ssh(sshClient, sshHost)
 	case "system":
-		system_ssh(sshClient, credentialsMap["host"].(string))
+		system_ssh(sshClient, sshHost)
 	case "disk":
-		disk_ssh(sshClient, credentialsMap["host"].(string))
+		disk_ssh(sshClient, sshHost)
 	case "process":
-		process_ssh(sshClient, credentialsMap["host"].(string))
+		process_ssh(sshClient, sshHost)
 	case "memory":
-		memory_ssh(sshClient, credentialsMap["host"].(string))
+		memory_ssh(sshClient, sshHost)
+	default:
+		statusMap := map[string]interface{}{
+			"status":      "error",
+			"error":       "Unknown Matrix Group",
+			"status.code": 400,
+		}
 
+		b, _ := json.Marshal(statusMap)
+
+		encode := base64.StdEncoding.EncodeToString(b)
+		fmt.Println(encode)
+		os.Exit(0)
 	}
 	//cpu_ssh(sshClient, credentialsMap["host"])
 	/*memory_ssh(sshClient, credentialsMap["host"])
