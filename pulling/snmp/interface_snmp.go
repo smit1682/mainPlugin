@@ -40,7 +40,6 @@ func interfaceSnmp(params *gosnmp.GoSNMP, host string) {
 
 		switch resultOfOIDs.Variables[2].Value {
 		case 1:
-
 			ifAdmin = "up"
 		case 2:
 			ifAdmin = "down"
@@ -49,7 +48,6 @@ func interfaceSnmp(params *gosnmp.GoSNMP, host string) {
 
 		switch resultOfOIDs.Variables[1].Value {
 		case 6:
-
 			ifType = "ethernetCsmacd"
 		case 1:
 			ifType = "other"
@@ -105,7 +103,7 @@ func interfaceSnmp(params *gosnmp.GoSNMP, host string) {
 		"status.code": 200,
 	}
 
-	b, marshalErr := json.Marshal(result1)
+	marshal, marshalErr := json.Marshal(result1)
 	if marshalErr != nil {
 
 		statusMap := map[string]interface{}{
@@ -114,13 +112,13 @@ func interfaceSnmp(params *gosnmp.GoSNMP, host string) {
 			"status.code": 400,
 		}
 
-		b, _ := json.Marshal(statusMap)
-		encode := base64.StdEncoding.EncodeToString(b)
+		marshal, _ := json.Marshal(statusMap)
+		encode := base64.StdEncoding.EncodeToString(marshal)
 		fmt.Println(encode)
 		os.Exit(0)
 
 	}
-	encode := base64.StdEncoding.EncodeToString(b)
+	encode := base64.StdEncoding.EncodeToString(marshal)
 	fmt.Println(encode)
 
 }

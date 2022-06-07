@@ -68,4 +68,5 @@ func process_ssh(sshClient *ssh.Client, host string) {
 	}
 	encode := base64.StdEncoding.EncodeToString(b)
 	fmt.Println(encode)
+	os.Exit(0)
 }

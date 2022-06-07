@@ -29,6 +29,7 @@ func system_winrm(client *winrm.Client, host string) {
 
 	result := map[string]interface{}{
 		"host":          host,
+		"status":        "success",
 		"os.version":    osVersion,
 		"os.name":       osName,
 		"username":      username,

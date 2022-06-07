@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"golang.org/x/crypto/ssh"
 	"log"
+	"os"
 	"strings"
 	"time"
 )
@@ -34,8 +35,6 @@ func sshDiscovery(credentialsMap map[string]interface{}) {
 
 	if errDial != nil {
 
-		fmt.Println("er", errDial.Error())
-
 		if strings.Contains(errDial.Error(), "handshake failed") {
 
 			statusMap := map[string]interface{}{
@@ -63,6 +62,18 @@ func sshDiscovery(credentialsMap map[string]interface{}) {
 			encode := base64.StdEncoding.EncodeToString(b)
 			log.SetFlags(0)
 			log.Fatal(encode)
+		} else {
+			statusMap := map[string]interface{}{
+				"status":      "error",
+				"error":       errDial.Error(),
+				"status.code": 400,
+			}
+
+			b, _ := json.Marshal(statusMap)
+
+			encode := base64.StdEncoding.EncodeToString(b)
+			fmt.Println(encode)
+			os.Exit(0)
 		}
 
 	}

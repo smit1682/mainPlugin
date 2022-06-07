@@ -15,16 +15,11 @@ func cpu_ssh(sshClient *ssh.Client, host string) {
 	if err != nil {
 	}
 
-	// Execute remote commands
-
-	//combo, err := session.Output("df -h")                    //pwd; free -m; snmpwalk -H Combined output
 	cpuUtilization, err := session.CombinedOutput("mpstat -P ALL") // it will show you all 4 processors usage
 
 	var cpuList []map[string]string
 	cpuUtilizationString := string(cpuUtilization)
 	cpuStringArray := strings.Split(cpuUtilizationString, "\n")
-
-	//fmt.Println(len(cpuStringArray))
 
 	flag1 := 1
 	for _, v := range cpuStringArray {
@@ -75,7 +70,7 @@ func cpu_ssh(sshClient *ssh.Client, host string) {
 		"cpu":                       cpuList,
 	}
 
-	b, marshalErr := json.Marshal(result)
+	bytes, marshalErr := json.Marshal(result)
 	if marshalErr != nil {
 
 		statusMap := map[string]interface{}{
@@ -84,13 +79,14 @@ func cpu_ssh(sshClient *ssh.Client, host string) {
 			"status.code": 400,
 		}
 
-		b, _ := json.Marshal(statusMap)
-		encode := base64.StdEncoding.EncodeToString(b)
+		marshal, _ := json.Marshal(statusMap)
+		encode := base64.StdEncoding.EncodeToString(marshal)
 		fmt.Println(encode)
 		os.Exit(0)
 
 	}
-	encode := base64.StdEncoding.EncodeToString(b)
+
+	encode := base64.StdEncoding.EncodeToString(bytes)
 	fmt.Println(encode)
 
 }

@@ -53,7 +53,7 @@ func memory_ssh(sshClient *ssh.Client, host string) {
 		"memory.free.percentage.bytes": final,
 	}
 
-	b, marshalErr := json.Marshal(result)
+	marshal, marshalErr := json.Marshal(result)
 	if marshalErr != nil {
 
 		statusMap := map[string]interface{}{
@@ -62,12 +62,12 @@ func memory_ssh(sshClient *ssh.Client, host string) {
 			"status.code": 400,
 		}
 
-		b, _ := json.Marshal(statusMap)
-		encode := base64.StdEncoding.EncodeToString(b)
+		marshal, _ := json.Marshal(statusMap)
+		encode := base64.StdEncoding.EncodeToString(marshal)
 		fmt.Println(encode)
 		os.Exit(0)
 
 	}
-	encode := base64.StdEncoding.EncodeToString(b)
+	encode := base64.StdEncoding.EncodeToString(marshal)
 	fmt.Println(encode)
 }
